@@ -292,6 +292,132 @@ suite('hase', function () {
           });
         });
       });
+
+      suite('publisher', function () {
+        test('is a function.', function (done) {
+          assert.that(mq.publisher, is.ofType('function'));
+          done();
+        });
+
+        test('throws an error if name is missing.', function (done) {
+          assert.that(function () {
+            mq.publisher();
+          }, is.throwing('Name is missing.'));
+          done();
+        });
+
+        test('returns an object.', function (done) {
+          assert.that(mq.publisher(uuid()), is.ofType('object'));
+          done();
+        });
+
+        suite('createWriteStream', function () {
+          test('is a function.', function (done) {
+            assert.that(mq.publisher(uuid()).createWriteStream, is.ofType('function'));
+            done();
+          });
+
+          test('throws an error if callback is missing.', function (done) {
+            assert.that(function () {
+              mq.publisher(uuid()).createWriteStream();
+            }, is.throwing('Callback is missing.'));
+            done();
+          });
+
+          test('returns a writable stream.', function (done) {
+            mq.publisher(uuid()).createWriteStream(function (err, stream) {
+              assert.that(err, is.null());
+              assert.that(stream instanceof Writable, is.true());
+              done();
+            });
+          });
+
+          suite('writable stream', function () {
+            test('does not throw an error when writing.', function (done) {
+              mq.publisher(uuid()).createWriteStream(function (err, stream) {
+                assert.that(err, is.null());
+                assert.that(function () {
+                  stream.write({ foo: 'bar' });
+                }, is.not.throwing());
+                done();
+              });
+            });
+          });
+        });
+
+        suite('createReadStream', function () {
+          test('is a function.', function (done) {
+            assert.that(mq.publisher(uuid()).createReadStream, is.ofType('function'));
+            done();
+          });
+
+          test('throws an error if callback is missing.', function (done) {
+            assert.that(function () {
+              mq.publisher(uuid()).createReadStream();
+            }, is.throwing('Callback is missing.'));
+            done();
+          });
+
+          test('returns a readable stream.', function (done) {
+            mq.publisher(uuid()).createReadStream(function (err, stream) {
+              assert.that(err, is.null());
+              assert.that(stream instanceof Readable, is.true());
+              done();
+            });
+          });
+
+          suite('readable stream', function () {
+            test('returns a single message.', function (done) {
+              var name = uuid();
+
+              mq.publisher(name).createReadStream(function (err, stream) {
+                assert.that(err, is.null());
+                stream.once('data', function (message) {
+                  assert.that(message, is.equalTo({ foo: 'bar' }));
+                  done();
+                });
+
+                mq.publisher(name).createWriteStream(function (err, stream) {
+                  assert.that(err, is.null());
+                  stream.write({ foo: 'bar' });
+                });
+              });
+            });
+
+            test('returns multiple messages.', function (done) {
+              var name = uuid();
+
+              mq.publisher(name).createReadStream(function (err, stream) {
+                var counter;
+
+                assert.that(err, is.null());
+
+                counter = 0;
+                stream.on('data', function (message) {
+                  counter++;
+                  /*eslint-disable default-case*/
+                  switch (counter) {
+                  /*eslint-enable default-case*/
+                    case 1:
+                      assert.that(message, is.equalTo({ foo: 'bar' }));
+                      break;
+                    case 2:
+                      assert.that(message, is.equalTo({ foo: 'baz' }));
+                      done();
+                      break;
+                  }
+                });
+
+                mq.publisher(name).createWriteStream(function (err, stream) {
+                  assert.that(err, is.null());
+                  stream.write({ foo: 'bar' });
+                  stream.write({ foo: 'baz' });
+                });
+              });
+            });
+          });
+        });
+      });
     });
   });
 });

@@ -32,9 +32,9 @@ hase.connect('amqp://...', function (err, mq) {
 });
 ```
 
-### Using a worker
+### Using workers
 
-A worker is a combination of a single exchange with a single queue that shares its load across multiple workers. For that, call the `worker` function and specify a name.
+A worker is a combination of a single exchange with a single queue that shares its load across multiple nodes. For that, call the `worker` function and specify a name.
 
 ```javascript
 hase.connect('amqp://...', function (err, mq) {
@@ -74,6 +74,50 @@ hase.connect('amqp://...', function (err, mq) {
     stream.on('data', function (message) {
       // ...
       stream.next(); // or stream.discard(); or stream.defer();
+    };
+  });
+});
+```
+
+### Using publishers
+
+A publisher is a combination of a single exchange with multiple queues where each queue receives all messages. For that, call the `publisher` function and specify a name.
+
+```javascript
+hase.connect('amqp://...', function (err, mq) {
+  mq.once('error', function (err) {
+    // ...
+  });
+
+  var publisher = mq.publisher('test');
+});
+```
+
+To publish messages to this publisher, call the `createWriteStream` function, and then use the `write` function of the stream that is returned.
+
+```javascript
+hase.connect('amqp://...', function (err, mq) {
+  mq.once('error', function (err) {
+    // ...
+  });
+
+  mq.publisher('test').createWriteStream(function (err, stream) {
+    stream.write({ foo: 'bar' });
+  });
+});
+```
+
+To subscribe to messages received by this publisher, call the `createReadStream` function, and then subscribe to the stream's `data` event.
+
+```javascript
+hase.connect('amqp://...', function (err, mq) {
+  mq.once('error', function (err) {
+    // ...
+  });
+
+  mq.publisher('test').createReadStream(function (err, stream) {
+    stream.on('data', function (message) {
+      // ...
     };
   });
 });
