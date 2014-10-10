@@ -1,0 +1,30 @@
+{
+  "name": "hase",
+  "version": "0.0.0",
+  "description": "hase handles exchanges and queues on RabbitMQ.",
+  "contributors": [
+    {
+      "name": "Golo Roden",
+      "email": "golo.roden@thenativeweb.io"
+    },
+    {
+      "name": "Matthias Wagler",
+      "email": "matthias.wagler@thenativeweb.io"
+    }
+  ],
+  "main": "lib/hase.js",
+  "private": true,
+  "dependencies": {
+    "amqplib": "0.2.1"
+  },
+  "devDependencies": {
+    "grunt": "0.4.5",
+    "node-assertthat": "0.2.1",
+    "tourism": "0.7.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/thenativeweb/hase.git"
+  },
+  "license": "MIT"
+}
