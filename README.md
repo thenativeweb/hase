@@ -38,6 +38,10 @@ A worker is a combination of a single exchange with a single queue that shares i
 
 ```javascript
 hase.connect('amqp://...', function (err, mq) {
+  mq.once('error', function (err) {
+    // ...
+  });
+
   var worker = mq.worker('test');
 });
 ```
@@ -46,6 +50,10 @@ To publish messages to this worker, call the `createWriteStream` function, and t
 
 ```javascript
 hase.connect('amqp://...', function (err, mq) {
+  mq.once('error', function (err) {
+    // ...
+  });
+
   mq.worker('test').createWriteStream(function (err, stream) {
     stream.write({ foo: 'bar' });
   });
