@@ -60,6 +60,25 @@ hase.connect('amqp://...', function (err, mq) {
 });
 ```
 
+To subscribe to messages received by this worker, call the `createReadStream` function, and then subscribe to its `data` event.
+
+Additionally, you need to decide how to deal with the message. If you were able to handle it successfully, call the `next` function. If not, either call `discard` (which removes the message), or call `defer` (which requeues the message).
+
+```javascript
+hase.connect('amqp://...', function (err, mq) {
+  mq.once('error', function (err) {
+    // ...
+  });
+
+  mq.worker('test').createReadStream(function (err, stream) {
+    stream.on('data', function (message) {
+      // ...
+      stream.next(); // or stream.discard(); or stream.defer();
+    };
+  });
+});
+```
+
 ## Running the build
 
 This module can be built using [Grunt](http://gruntjs.com/). Besides running the tests, this also analyses the code. To run Grunt, go to the folder where you have installed hase and run `grunt`. You need to have [grunt-cli](https://github.com/gruntjs/grunt-cli) installed.
