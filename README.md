@@ -8,7 +8,49 @@ At the moment, installation of this module must be made manually.
 
 ## Quick start
 
-[...]
+First you need to add a reference to hase in your application.
+
+```javascript
+var hase = require('hase');
+```
+
+Then you need to connect to a RabbitMQ instance by calling the `connect` function and providing the instance's url.
+
+```javascript
+hase.connect('amqp://...', function (err, mq) {
+  // ...
+});
+```
+
+In case the connection is lost or something goes wrong, an error is emitted on the `mq` object. So you should subscribe to the `error` object.
+
+```javascript
+hase.connect('amqp://...', function (err, mq) {
+  mq.once('error', function (err) {
+    // ...
+  });
+});
+```
+
+### Using a worker
+
+A worker is a combination of a single exchange with a single queue that shares its load across multiple workers. For that, call the `worker` function and specify a name.
+
+```javascript
+hase.connect('amqp://...', function (err, mq) {
+  var worker = mq.worker('test');
+});
+```
+
+To publish messages to this worker, call the `createWriteStream` function, and then use the `write` function of the stream that is returned.
+
+```javascript
+hase.connect('amqp://...', function (err, mq) {
+  mq.worker('test').createWriteStream(function (err, stream) {
+    stream.write({ foo: 'bar' });
+  });
+});
+```
 
 ## Running the build
 
