@@ -62,7 +62,7 @@ hase.connect('amqp://...', function (err, mq) {
 
 To subscribe to messages received by this worker, call the `createReadStream` function, and then subscribe to its `data` event.
 
-Additionally, you need to decide how to deal with the message. If you were able to handle it successfully, call the `next` function. If not, either call `discard` (which removes the message), or call `defer` (which requeues the message).
+Additionally, you need to decide how to deal with the message. If you were able to successfully handle the message, call the `next` function. If not, either call `discard` (which removes the message), or call `defer` (which requeues the message).
 
 ```javascript
 hase.connect('amqp://...', function (err, mq) {
