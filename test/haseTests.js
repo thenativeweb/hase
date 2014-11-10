@@ -39,15 +39,15 @@ suite('hase', function () {
     });
 
     test('returns an error if it can not connect using the given url.', function (done) {
-      hase.connect('amqp://admin:admin@localhost:12345', function (err) {
+      hase.connect('amqp://admin:admin@local.wolkenkit.io:12345', function (err) {
         assert.that(err, is.not.null());
-        assert.that(err.message, is.equalTo('Could not connect to amqp://admin:admin@localhost:12345.'));
+        assert.that(err.message, is.equalTo('Could not connect to amqp://admin:admin@local.wolkenkit.io:12345.'));
         done();
       });
     });
 
     test('returns a reference to the message queue.', function (done) {
-      hase.connect('amqp://admin:admin@localhost:5672', function (err, mq) {
+      hase.connect('amqp://admin:admin@local.wolkenkit.io:5672', function (err, mq) {
         assert.that(err, is.null());
         assert.that(mq, is.ofType('object'));
         done();
@@ -58,7 +58,7 @@ suite('hase', function () {
       var mq;
 
       suiteSetup(function (done) {
-        hase.connect('amqp://admin:admin@localhost:5672', function (err, _mq) {
+        hase.connect('amqp://admin:admin@local.wolkenkit.io:5672', function (err, _mq) {
           mq = _mq;
           done(err);
         });
