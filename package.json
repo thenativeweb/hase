@@ -13,7 +13,6 @@
     }
   ],
   "main": "lib/hase.js",
-  "private": true,
   "dependencies": {
     "amqplib": "0.3.0"
   },

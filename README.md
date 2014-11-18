@@ -4,7 +4,7 @@ hase handles exchanges and queues on RabbitMQ.
 
 ## Installation
 
-At the moment, installation of this module must be made manually.
+    $ npm install hase
 
 ## Quick start
 
