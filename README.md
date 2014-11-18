@@ -22,7 +22,7 @@ hase.connect('amqp://...', function (err, mq) {
 });
 ```
 
-In case the connection is lost or something goes wrong, an error is emitted on the `mq` object. So you should subscribe to the `error` object.
+In case the connection is lost or something goes wrong, an error is emitted on the `mq` object. So you should subscribe to the `error` event.
 
 ```javascript
 hase.connect('amqp://...', function (err, mq) {
