@@ -8,6 +8,8 @@ var assert = require('node-assertthat'),
 
 var hase = require('../lib/hase');
 
+var rabbitUrl = require('./config.json').rabbitUrl;
+
 var EventEmitter = events.EventEmitter,
     Readable = stream.Readable,
     Writable = stream.Writable;
@@ -47,7 +49,7 @@ suite('hase', function () {
     });
 
     test('returns a reference to the message queue.', function (done) {
-      hase.connect('amqp://admin:admin@localhost:5672', function (err, mq) {
+      hase.connect(rabbitUrl, function (err, mq) {
         assert.that(err, is.null());
         assert.that(mq, is.ofType('object'));
         done();
@@ -58,7 +60,7 @@ suite('hase', function () {
       var mq;
 
       suiteSetup(function (done) {
-        hase.connect('amqp://admin:admin@localhost:5672', function (err, _mq) {
+        hase.connect(rabbitUrl, function (err, _mq) {
           mq = _mq;
           done(err);
         });
@@ -143,30 +145,6 @@ suite('hase', function () {
           });
 
           suite('readable stream', function () {
-            test('has a next function.', function (done) {
-              mq.worker(uuid()).createReadStream(function (err, stream) {
-                assert.that(err, is.null());
-                assert.that(stream.next, is.ofType('function'));
-                done();
-              });
-            });
-
-            test('has a discard function.', function (done) {
-              mq.worker(uuid()).createReadStream(function (err, stream) {
-                assert.that(err, is.null());
-                assert.that(stream.discard, is.ofType('function'));
-                done();
-              });
-            });
-
-            test('has a defer function.', function (done) {
-              mq.worker(uuid()).createReadStream(function (err, stream) {
-                assert.that(err, is.null());
-                assert.that(stream.defer, is.ofType('function'));
-                done();
-              });
-            });
-
             test('returns a single message.', function (done) {
               var name = uuid();
 
@@ -178,8 +156,11 @@ suite('hase', function () {
               mq.worker(name).createReadStream(function (err, stream) {
                 assert.that(err, is.null());
                 stream.once('data', function (message) {
-                  assert.that(message, is.equalTo({ foo: 'bar' }));
-                  stream.next();
+                  assert.that(message.payload, is.equalTo({ foo: 'bar' }));
+                  assert.that(message.next, is.ofType('function'));
+                  assert.that(message.discard, is.ofType('function'));
+                  assert.that(message.defer, is.ofType('function'));
+                  message.next();
                   done();
                 });
               });
@@ -206,12 +187,12 @@ suite('hase', function () {
                   switch (counter) {
                   /*eslint-enable default-case*/
                     case 1:
-                      assert.that(message, is.equalTo({ foo: 'bar' }));
-                      stream.next();
+                      assert.that(message.payload, is.equalTo({ foo: 'bar' }));
+                      message.next();
                       break;
                     case 2:
-                      assert.that(message, is.equalTo({ foo: 'baz' }));
-                      stream.next();
+                      assert.that(message.payload, is.equalTo({ foo: 'baz' }));
+                      message.next();
                       done();
                       break;
                   }
@@ -241,12 +222,12 @@ suite('hase', function () {
                     switch (counter) {
                     /*eslint-enable default-case*/
                       case 1:
-                        assert.that(message, is.equalTo({ foo: 'bar' }));
-                        stream.discard();
+                        assert.that(message.payload, is.equalTo({ foo: 'bar' }));
+                        message.discard();
                         break;
                       case 2:
-                        assert.that(message, is.equalTo({ foo: 'baz' }));
-                        stream.next();
+                        assert.that(message.payload, is.equalTo({ foo: 'baz' }));
+                        message.next();
                         done();
                         break;
                     }
@@ -276,12 +257,12 @@ suite('hase', function () {
                     switch (counter) {
                     /*eslint-enable default-case*/
                       case 1:
-                        assert.that(message, is.equalTo({ foo: 'bar' }));
-                        stream.defer();
+                        assert.that(message.payload, is.equalTo({ foo: 'bar' }));
+                        message.defer();
                         break;
                       case 2:
-                        assert.that(message, is.equalTo({ foo: 'bar' }));
-                        stream.next();
+                        assert.that(message.payload, is.equalTo({ foo: 'bar' }));
+                        message.next();
                         done();
                         break;
                     }
@@ -373,7 +354,7 @@ suite('hase', function () {
               mq.publisher(name).createReadStream(function (err, stream) {
                 assert.that(err, is.null());
                 stream.once('data', function (message) {
-                  assert.that(message, is.equalTo({ foo: 'bar' }));
+                  assert.that(message.payload, is.equalTo({ foo: 'bar' }));
                   done();
                 });
 
@@ -399,10 +380,10 @@ suite('hase', function () {
                   switch (counter) {
                   /*eslint-enable default-case*/
                     case 1:
-                      assert.that(message, is.equalTo({ foo: 'bar' }));
+                      assert.that(message.payload, is.equalTo({ foo: 'bar' }));
                       break;
                     case 2:
-                      assert.that(message, is.equalTo({ foo: 'baz' }));
+                      assert.that(message.payload, is.equalTo({ foo: 'baz' }));
                       done();
                       break;
                   }

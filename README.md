@@ -60,7 +60,7 @@ hase.connect('amqp://...', function (err, mq) {
 });
 ```
 
-To subscribe to messages received by this worker, call the `createReadStream` function, and then subscribe to the stream's `data` event.
+To subscribe to messages received by this worker, call the `createReadStream` function, and then subscribe to the stream's `data` event. You can access the message's payload through its `payload` property.
 
 Additionally, you need to process the received message. If you were able to successfully handle the message, call the `next` function. If not, either call `discard` (which removes the message), or call `defer` (which requeues the message).
 
@@ -73,7 +73,7 @@ hase.connect('amqp://...', function (err, mq) {
   mq.worker('test').createReadStream(function (err, stream) {
     stream.on('data', function (message) {
       // ...
-      stream.next(); // or stream.discard(); or stream.defer();
+      message.next(); // or message.discard(); or message.defer();
     };
   });
 });
@@ -107,7 +107,7 @@ hase.connect('amqp://...', function (err, mq) {
 });
 ```
 
-To subscribe to messages received by this publisher, call the `createReadStream` function, and then subscribe to the stream's `data` event.
+To subscribe to messages received by this publisher, call the `createReadStream` function, and then subscribe to the stream's `data` event. You can access the message's payload through its `payload` property.
 
 ```javascript
 hase.connect('amqp://...', function (err, mq) {
