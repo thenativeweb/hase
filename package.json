@@ -1,6 +1,6 @@
 {
   "name": "hase",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "hase handles exchanges and queues on RabbitMQ.",
   "contributors": [
     {
