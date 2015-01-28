@@ -2,6 +2,8 @@
 
 hase handles exchanges and queues on RabbitMQ.
 
+![hase](https://github.com/thenativeweb/hase/raw/master/images/logo.jpg "hase")
+
 ## Installation
 
     $ npm install hase
