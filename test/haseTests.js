@@ -197,6 +197,38 @@ suite('hase', function () {
               });
             });
 
+            test('returns multiple messages in the correct order.', function (done) {
+              var name = uuid();
+
+              mq.worker(name).createReadStream(function (errCreateReadStream, readStream) {
+                var barFinished;
+
+                assert.that(errCreateReadStream, is.null());
+
+                barFinished = false;
+                readStream.on('data', function (message) {
+                  if (message.payload.foo === 'bar') {
+                    setTimeout(function () {
+                      barFinished = true;
+                      message.next();
+                    }, 0.5 * 1000);
+                  }
+
+                  if (message.payload.foo === 'baz') {
+                    assert.that(barFinished, is.true());
+                    message.next();
+                    done();
+                  }
+                });
+
+                mq.worker(name).createWriteStream(function (err, writeStream) {
+                  assert.that(err, is.null());
+                  writeStream.write({ foo: 'bar' });
+                  writeStream.write({ foo: 'baz' });
+                });
+              });
+            });
+
             suite('discard', function () {
               test('throws away a received message.', function (done) {
                 var name = uuid();
@@ -352,6 +384,7 @@ suite('hase', function () {
                 assert.that(errCreateReadStream, is.null());
                 readStream.once('data', function (message) {
                   assert.that(message.payload, is.equalTo({ foo: 'bar' }));
+                  message.next();
                   done();
                 });
 
@@ -378,9 +411,11 @@ suite('hase', function () {
                   /*eslint-enable default-case*/
                     case 1:
                       assert.that(message.payload, is.equalTo({ foo: 'bar' }));
+                      message.next();
                       break;
                     case 2:
                       assert.that(message.payload, is.equalTo({ foo: 'baz' }));
+                      message.next();
                       done();
                       break;
                   }
@@ -390,6 +425,109 @@ suite('hase', function () {
                   assert.that(err, is.null());
                   writeStream.write({ foo: 'bar' });
                   writeStream.write({ foo: 'baz' });
+                });
+              });
+            });
+
+            test('returns multiple messages in the correct order.', function (done) {
+              var name = uuid();
+
+              mq.publisher(name).createReadStream(function (errCreateReadStream, readStream) {
+                var barFinished;
+
+                assert.that(errCreateReadStream, is.null());
+
+                barFinished = false;
+                readStream.on('data', function (message) {
+                  if (message.payload.foo === 'bar') {
+                    setTimeout(function () {
+                      barFinished = true;
+                      message.next();
+                    }, 0.5 * 1000);
+                  }
+
+                  if (message.payload.foo === 'baz') {
+                    assert.that(barFinished, is.true());
+                    message.next();
+                    done();
+                  }
+                });
+
+                mq.publisher(name).createWriteStream(function (err, writeStream) {
+                  assert.that(err, is.null());
+                  writeStream.write({ foo: 'bar' });
+                  writeStream.write({ foo: 'baz' });
+                });
+              });
+            });
+
+            suite('discard', function () {
+              test('throws away a received message.', function (done) {
+                var name = uuid();
+
+                mq.publisher(name).createReadStream(function (errCreateReadStream, readStream) {
+                  var counter;
+
+                  assert.that(errCreateReadStream, is.null());
+
+                  counter = 0;
+                  readStream.on('data', function (message) {
+                    counter++;
+                    /*eslint-disable default-case*/
+                    switch (counter) {
+                    /*eslint-enable default-case*/
+                      case 1:
+                        assert.that(message.payload, is.equalTo({ foo: 'bar' }));
+                        message.discard();
+                        break;
+                      case 2:
+                        assert.that(message.payload, is.equalTo({ foo: 'baz' }));
+                        message.next();
+                        done();
+                        break;
+                    }
+                  });
+
+                  mq.publisher(name).createWriteStream(function (err, writeStream) {
+                    assert.that(err, is.null());
+                    writeStream.write({ foo: 'bar' });
+                    writeStream.write({ foo: 'baz' });
+                  });
+                });
+              });
+            });
+
+            suite('defer', function () {
+              test('requeues a received message.', function (done) {
+                var name = uuid();
+
+                mq.publisher(name).createReadStream(function (errCreateReadStream, readStream) {
+                  var counter;
+
+                  assert.that(errCreateReadStream, is.null());
+
+                  counter = 0;
+                  readStream.on('data', function (message) {
+                    counter++;
+                    /*eslint-disable default-case*/
+                    switch (counter) {
+                    /*eslint-enable default-case*/
+                      case 1:
+                        assert.that(message.payload, is.equalTo({ foo: 'bar' }));
+                        message.defer();
+                        break;
+                      case 2:
+                        assert.that(message.payload, is.equalTo({ foo: 'bar' }));
+                        message.next();
+                        done();
+                        break;
+                    }
+                  });
+
+                  mq.publisher(name).createWriteStream(function (err, writeStream) {
+                    assert.that(err, is.null());
+                    writeStream.write({ foo: 'bar' });
+                  });
                 });
               });
             });
