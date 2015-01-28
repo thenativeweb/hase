@@ -1,18 +1,15 @@
 'use strict';
 
-var events = require('events'),
-    stream = require('stream');
+var EventEmitter = require('events').EventEmitter,
+    Readable = require('stream').Readable,
+    Writable = require('stream').Writable;
 
-var assert = require('node-assertthat'),
+var assert = require('assertthat'),
     uuid = require('uuidv4');
 
 var hase = require('../lib/hase');
 
 var rabbitUrl = require('./config.json').rabbitUrl;
-
-var EventEmitter = events.EventEmitter,
-    Readable = stream.Readable,
-    Writable = stream.Writable;
 
 suite('hase', function () {
   test('is an object.', function (done) {
@@ -351,16 +348,16 @@ suite('hase', function () {
             test('returns a single message.', function (done) {
               var name = uuid();
 
-              mq.publisher(name).createReadStream(function (err, stream) {
-                assert.that(err, is.null());
-                stream.once('data', function (message) {
+              mq.publisher(name).createReadStream(function (errCreateReadStream, readStream) {
+                assert.that(errCreateReadStream, is.null());
+                readStream.once('data', function (message) {
                   assert.that(message.payload, is.equalTo({ foo: 'bar' }));
                   done();
                 });
 
-                mq.publisher(name).createWriteStream(function (err, stream) {
+                mq.publisher(name).createWriteStream(function (err, writeStream) {
                   assert.that(err, is.null());
-                  stream.write({ foo: 'bar' });
+                  writeStream.write({ foo: 'bar' });
                 });
               });
             });
@@ -368,13 +365,13 @@ suite('hase', function () {
             test('returns multiple messages.', function (done) {
               var name = uuid();
 
-              mq.publisher(name).createReadStream(function (err, stream) {
+              mq.publisher(name).createReadStream(function (errCreateReadStream, readStream) {
                 var counter;
 
-                assert.that(err, is.null());
+                assert.that(errCreateReadStream, is.null());
 
                 counter = 0;
-                stream.on('data', function (message) {
+                readStream.on('data', function (message) {
                   counter++;
                   /*eslint-disable default-case*/
                   switch (counter) {
@@ -389,10 +386,10 @@ suite('hase', function () {
                   }
                 });
 
-                mq.publisher(name).createWriteStream(function (err, stream) {
+                mq.publisher(name).createWriteStream(function (err, writeStream) {
                   assert.that(err, is.null());
-                  stream.write({ foo: 'bar' });
-                  stream.write({ foo: 'baz' });
+                  writeStream.write({ foo: 'bar' });
+                  writeStream.write({ foo: 'baz' });
                 });
               });
             });
