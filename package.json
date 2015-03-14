@@ -26,5 +26,10 @@
     "type": "git",
     "url": "git://github.com/thenativeweb/hase.git"
   },
+  "keywords": [
+    "amqp",
+    "rabbit",
+    "rabbitmq"
+  ],
   "license": "MIT"
 }
