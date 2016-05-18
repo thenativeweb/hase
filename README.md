@@ -6,20 +6,22 @@ hase handles exchanges and queues on RabbitMQ.
 
 ## Installation
 
-    $ npm install hase
+```bash
+$ npm install hase
+```
 
 ## Quick start
 
 First you need to add a reference to hase in your application.
 
 ```javascript
-var hase = require('hase');
+const hase = require('hase');
 ```
 
 Then you need to connect to a RabbitMQ instance by calling the `connect` function and providing the instance's url.
 
 ```javascript
-hase.connect('amqp://...', function (err, mq) {
+hase.connect('amqp://...', (err, mq) => {
   // ...
 });
 ```
@@ -27,8 +29,8 @@ hase.connect('amqp://...', function (err, mq) {
 In case the connection is lost or something goes wrong, an error is emitted on the `mq` object. So you should subscribe to the `error` event.
 
 ```javascript
-hase.connect('amqp://...', function (err, mq) {
-  mq.once('error', function (err) {
+hase.connect('amqp://...', (err, mq) => {
+  mq.once('error', err => {
     // ...
   });
 });
@@ -39,24 +41,24 @@ hase.connect('amqp://...', function (err, mq) {
 A worker is a combination of a single exchange with a single queue that shares its load across multiple nodes. For that, call the `worker` function and specify a name.
 
 ```javascript
-hase.connect('amqp://...', function (err, mq) {
-  mq.once('error', function (err) {
+hase.connect('amqp://...', (err, mq) => {
+  mq.once('error', err => {
     // ...
   });
 
-  var worker = mq.worker('test');
+  const worker = mq.worker('test');
 });
 ```
 
 To publish messages to this worker, call the `createWriteStream` function, and then use the `write` function of the stream that is returned.
 
 ```javascript
-hase.connect('amqp://...', function (err, mq) {
-  mq.once('error', function (err) {
+hase.connect('amqp://...', (err, mq) => {
+  mq.once('error', err => {
     // ...
   });
 
-  mq.worker('test').createWriteStream(function (err, stream) {
+  mq.worker('test').createWriteStream((err, stream) => {
     stream.write({ foo: 'bar' });
   });
 });
@@ -67,13 +69,13 @@ To subscribe to messages received by this worker, call the `createReadStream` fu
 Additionally, you need to process the received message. If you were able to successfully handle the message, call the `next` function. If not, either call `discard` (which removes the message), or call `defer` (which requeues the message).
 
 ```javascript
-hase.connect('amqp://...', function (err, mq) {
-  mq.once('error', function (err) {
+hase.connect('amqp://...', (err, mq) => {
+  mq.once('error', err => {
     // ...
   });
 
-  mq.worker('test').createReadStream(function (err, stream) {
-    stream.on('data', function (message) {
+  mq.worker('test').createReadStream((err, stream) => {
+    stream.on('data', message => {
       // ...
       message.next(); // or message.discard(); or message.defer();
     };
@@ -86,24 +88,24 @@ hase.connect('amqp://...', function (err, mq) {
 A publisher is a combination of a single exchange with multiple queues where each queue receives all messages. For that, call the `publisher` function and specify a name.
 
 ```javascript
-hase.connect('amqp://...', function (err, mq) {
-  mq.once('error', function (err) {
+hase.connect('amqp://...', (err, mq) => {
+  mq.once('error', err => {
     // ...
   });
 
-  var publisher = mq.publisher('test');
+  const publisher = mq.publisher('test');
 });
 ```
 
 To publish messages to this publisher, call the `createWriteStream` function, and then use the `write` function of the stream that is returned.
 
 ```javascript
-hase.connect('amqp://...', function (err, mq) {
-  mq.once('error', function (err) {
+hase.connect('amqp://...', (err, mq) => {
+  mq.once('error', err => {
     // ...
   });
 
-  mq.publisher('test').createWriteStream(function (err, stream) {
+  mq.publisher('test').createWriteStream((err, stream) => {
     stream.write({ foo: 'bar' });
   });
 });
@@ -114,13 +116,13 @@ To subscribe to messages received by this publisher, call the `createReadStream`
 Additionally, you need to process the received message. If you were able to successfully handle the message, call the `next` function. If not, either call `discard` (which removes the message), or call `defer` (which requeues the message).
 
 ```javascript
-hase.connect('amqp://...', function (err, mq) {
-  mq.once('error', function (err) {
+hase.connect('amqp://...', (err, mq) => {
+  mq.once('error', err => {
     // ...
   });
 
-  mq.publisher('test').createReadStream(function (err, stream) {
-    stream.on('data', function (message) {
+  mq.publisher('test').createReadStream((err, stream) => {
+    stream.on('data', message => {
       // ...
       message.next(); // or message.discard(); or message.defer();
     };
@@ -130,14 +132,16 @@ hase.connect('amqp://...', function (err, mq) {
 
 ## Running the build
 
-This module can be built using [Grunt](http://gruntjs.com/). Besides running the tests, this also analyses the code. To run Grunt, go to the folder where you have installed hase and run `grunt`. You need to have [grunt-cli](https://github.com/gruntjs/grunt-cli) installed.
+To build this module use [roboter](https://www.npmjs.com/package/roboter).
 
-    $ grunt
+```bash
+$ bot build-server
+```
 
 ## License
 
 The MIT License (MIT)
-Copyright (c) 2014-2015 the native web.
+Copyright (c) 2014-2016 the native web.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

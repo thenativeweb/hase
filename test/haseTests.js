@@ -1,15 +1,15 @@
 'use strict';
 
-var EventEmitter = require('events').EventEmitter,
+const EventEmitter = require('events').EventEmitter,
     Readable = require('stream').Readable,
     Writable = require('stream').Writable;
 
-var assert = require('assertthat'),
+const assert = require('assertthat'),
     uuid = require('uuidv4');
 
-var hase = require('../lib/hase');
+const hase = require('../lib/hase');
 
-var rabbitUrl = require('./config.json').rabbitUrl;
+const rabbitUrl = require('./config.json').rabbitUrl;
 
 suite('hase', function () {
   test('is an object.', function (done) {
@@ -24,21 +24,21 @@ suite('hase', function () {
     });
 
     test('throws an error if the url is missing.', function (done) {
-      assert.that(function () {
+      assert.that(() => {
         hase.connect();
       }).is.throwing('Url is missing.');
       done();
     });
 
     test('throws an error if the callback is missing.', function (done) {
-      assert.that(function () {
+      assert.that(() => {
         hase.connect('amqp://...');
       }).is.throwing('Callback is missing.');
       done();
     });
 
     test('returns an error if it can not connect using the given url.', function (done) {
-      hase.connect('amqp://admin:admin@localhost:12345', function (err) {
+      hase.connect('amqp://admin:admin@localhost:12345', err => {
         assert.that(err).is.not.null();
         assert.that(err.message).is.equalTo('Could not connect to amqp://admin:admin@localhost:12345.');
         done();
@@ -46,7 +46,7 @@ suite('hase', function () {
     });
 
     test('returns a reference to the message queue.', function (done) {
-      hase.connect(rabbitUrl, function (err, mq) {
+      hase.connect(rabbitUrl, (err, mq) => {
         assert.that(err).is.null();
         assert.that(mq).is.ofType('object');
         done();
@@ -54,10 +54,10 @@ suite('hase', function () {
     });
 
     suite('mq', function () {
-      var mq;
+      let mq;
 
       suiteSetup(function (done) {
-        hase.connect(rabbitUrl, function (err, _mq) {
+        hase.connect(rabbitUrl, (err, _mq) => {
           mq = _mq;
           done(err);
         });
@@ -75,7 +75,7 @@ suite('hase', function () {
         });
 
         test('throws an error if name is missing.', function (done) {
-          assert.that(function () {
+          assert.that(() => {
             mq.worker();
           }).is.throwing('Name is missing.');
           done();
@@ -93,14 +93,14 @@ suite('hase', function () {
           });
 
           test('throws an error if callback is missing.', function (done) {
-            assert.that(function () {
+            assert.that(() => {
               mq.worker(uuid()).createWriteStream();
             }).is.throwing('Callback is missing.');
             done();
           });
 
           test('returns a writable stream.', function (done) {
-            mq.worker(uuid()).createWriteStream(function (err, stream) {
+            mq.worker(uuid()).createWriteStream((err, stream) => {
               assert.that(err).is.null();
               assert.that(stream instanceof Writable).is.true();
               done();
@@ -109,9 +109,9 @@ suite('hase', function () {
 
           suite('writable stream', function () {
             test('does not throw an error when writing.', function (done) {
-              mq.worker(uuid()).createWriteStream(function (err, stream) {
+              mq.worker(uuid()).createWriteStream((err, stream) => {
                 assert.that(err).is.null();
-                assert.that(function () {
+                assert.that(() => {
                   stream.write({ foo: 'bar' });
                 }).is.not.throwing();
                 done();
@@ -127,14 +127,14 @@ suite('hase', function () {
           });
 
           test('throws an error if callback is missing.', function (done) {
-            assert.that(function () {
+            assert.that(() => {
               mq.worker(uuid()).createReadStream();
             }).is.throwing('Callback is missing.');
             done();
           });
 
           test('returns a readable stream.', function (done) {
-            mq.worker(uuid()).createReadStream(function (err, stream) {
+            mq.worker(uuid()).createReadStream((err, stream) => {
               assert.that(err).is.null();
               assert.that(stream instanceof Readable).is.true();
               done();
@@ -143,16 +143,16 @@ suite('hase', function () {
 
           suite('readable stream', function () {
             test('returns a single message.', function (done) {
-              var name = uuid();
+              const name = uuid();
 
-              mq.worker(name).createWriteStream(function (err, stream) {
+              mq.worker(name).createWriteStream((err, stream) => {
                 assert.that(err).is.null();
                 stream.write({ foo: 'bar' });
               });
 
-              mq.worker(name).createReadStream(function (err, stream) {
+              mq.worker(name).createReadStream((err, stream) => {
                 assert.that(err).is.null();
-                stream.once('data', function (message) {
+                stream.once('data', message => {
                   assert.that(message.payload).is.equalTo({ foo: 'bar' });
                   assert.that(message.next).is.ofType('function');
                   assert.that(message.discard).is.ofType('function');
@@ -164,25 +164,24 @@ suite('hase', function () {
             });
 
             test('returns multiple messages.', function (done) {
-              var name = uuid();
+              const name = uuid();
 
-              mq.worker(name).createWriteStream(function (err, stream) {
+              mq.worker(name).createWriteStream((err, stream) => {
                 assert.that(err).is.null();
                 stream.write({ foo: 'bar' });
                 stream.write({ foo: 'baz' });
               });
 
-              mq.worker(name).createReadStream(function (err, stream) {
-                var counter;
-
+              mq.worker(name).createReadStream((err, stream) => {
                 assert.that(err).is.null();
 
-                counter = 0;
-                stream.on('data', function (message) {
+                let counter = 0;
+
+                stream.on('data', message => {
                   counter++;
-                  /*eslint-disable default-case*/
+                  /* eslint-disable default-case */
                   switch (counter) {
-                  /*eslint-enable default-case*/
+                  /* eslint-enable default-case */
                     case 1:
                       assert.that(message.payload).is.equalTo({ foo: 'bar' });
                       message.next();
@@ -198,17 +197,16 @@ suite('hase', function () {
             });
 
             test('returns multiple messages in the correct order.', function (done) {
-              var name = uuid();
+              const name = uuid();
 
-              mq.worker(name).createReadStream(function (errCreateReadStream, readStream) {
-                var barFinished;
-
+              mq.worker(name).createReadStream((errCreateReadStream, readStream) => {
                 assert.that(errCreateReadStream).is.null();
 
-                barFinished = false;
-                readStream.on('data', function (message) {
+                let barFinished = false;
+
+                readStream.on('data', message => {
                   if (message.payload.foo === 'bar') {
-                    setTimeout(function () {
+                    setTimeout(() => {
                       barFinished = true;
                       message.next();
                     }, 0.5 * 1000);
@@ -221,7 +219,7 @@ suite('hase', function () {
                   }
                 });
 
-                mq.worker(name).createWriteStream(function (err, writeStream) {
+                mq.worker(name).createWriteStream((err, writeStream) => {
                   assert.that(err).is.null();
                   writeStream.write({ foo: 'bar' });
                   writeStream.write({ foo: 'baz' });
@@ -231,25 +229,24 @@ suite('hase', function () {
 
             suite('discard', function () {
               test('throws away a received message.', function (done) {
-                var name = uuid();
+                const name = uuid();
 
-                mq.worker(name).createWriteStream(function (err, stream) {
+                mq.worker(name).createWriteStream((err, stream) => {
                   assert.that(err).is.null();
                   stream.write({ foo: 'bar' });
                   stream.write({ foo: 'baz' });
                 });
 
-                mq.worker(name).createReadStream(function (err, stream) {
-                  var counter;
-
+                mq.worker(name).createReadStream((err, stream) => {
                   assert.that(err).is.null();
 
-                  counter = 0;
-                  stream.on('data', function (message) {
+                  let counter = 0;
+
+                  stream.on('data', message => {
                     counter++;
-                    /*eslint-disable default-case*/
+                    /* eslint-disable default-case */
                     switch (counter) {
-                    /*eslint-enable default-case*/
+                    /* eslint-enable default-case */
                       case 1:
                         assert.that(message.payload).is.equalTo({ foo: 'bar' });
                         message.discard();
@@ -267,24 +264,23 @@ suite('hase', function () {
 
             suite('defer', function () {
               test('requeues a received message.', function (done) {
-                var name = uuid();
+                const name = uuid();
 
-                mq.worker(name).createWriteStream(function (err, stream) {
+                mq.worker(name).createWriteStream((err, stream) => {
                   assert.that(err).is.null();
                   stream.write({ foo: 'bar' });
                 });
 
-                mq.worker(name).createReadStream(function (err, stream) {
-                  var counter;
-
+                mq.worker(name).createReadStream((err, stream) => {
                   assert.that(err).is.null();
 
-                  counter = 0;
-                  stream.on('data', function (message) {
+                  let counter = 0;
+
+                  stream.on('data', message => {
                     counter++;
-                    /*eslint-disable default-case*/
+                    /* eslint-disable default-case */
                     switch (counter) {
-                    /*eslint-enable default-case*/
+                    /* eslint-enable default-case */
                       case 1:
                         assert.that(message.payload).is.equalTo({ foo: 'bar' });
                         message.defer();
@@ -310,7 +306,7 @@ suite('hase', function () {
         });
 
         test('throws an error if name is missing.', function (done) {
-          assert.that(function () {
+          assert.that(() => {
             mq.publisher();
           }).is.throwing('Name is missing.');
           done();
@@ -328,14 +324,14 @@ suite('hase', function () {
           });
 
           test('throws an error if callback is missing.', function (done) {
-            assert.that(function () {
+            assert.that(() => {
               mq.publisher(uuid()).createWriteStream();
             }).is.throwing('Callback is missing.');
             done();
           });
 
           test('returns a writable stream.', function (done) {
-            mq.publisher(uuid()).createWriteStream(function (err, stream) {
+            mq.publisher(uuid()).createWriteStream((err, stream) => {
               assert.that(err).is.null();
               assert.that(stream instanceof Writable).is.true();
               done();
@@ -344,9 +340,9 @@ suite('hase', function () {
 
           suite('writable stream', function () {
             test('does not throw an error when writing.', function (done) {
-              mq.publisher(uuid()).createWriteStream(function (err, stream) {
+              mq.publisher(uuid()).createWriteStream((err, stream) => {
                 assert.that(err).is.null();
-                assert.that(function () {
+                assert.that(() => {
                   stream.write({ foo: 'bar' });
                 }).is.not.throwing();
                 done();
@@ -362,14 +358,14 @@ suite('hase', function () {
           });
 
           test('throws an error if callback is missing.', function (done) {
-            assert.that(function () {
+            assert.that(() => {
               mq.publisher(uuid()).createReadStream();
             }).is.throwing('Callback is missing.');
             done();
           });
 
           test('returns a readable stream.', function (done) {
-            mq.publisher(uuid()).createReadStream(function (err, stream) {
+            mq.publisher(uuid()).createReadStream((err, stream) => {
               assert.that(err).is.null();
               assert.that(stream instanceof Readable).is.true();
               done();
@@ -378,17 +374,17 @@ suite('hase', function () {
 
           suite('readable stream', function () {
             test('returns a single message.', function (done) {
-              var name = uuid();
+              const name = uuid();
 
-              mq.publisher(name).createReadStream(function (errCreateReadStream, readStream) {
+              mq.publisher(name).createReadStream((errCreateReadStream, readStream) => {
                 assert.that(errCreateReadStream).is.null();
-                readStream.once('data', function (message) {
+                readStream.once('data', message => {
                   assert.that(message.payload).is.equalTo({ foo: 'bar' });
                   message.next();
                   done();
                 });
 
-                mq.publisher(name).createWriteStream(function (err, writeStream) {
+                mq.publisher(name).createWriteStream((err, writeStream) => {
                   assert.that(err).is.null();
                   writeStream.write({ foo: 'bar' });
                 });
@@ -396,19 +392,18 @@ suite('hase', function () {
             });
 
             test('returns multiple messages.', function (done) {
-              var name = uuid();
+              const name = uuid();
 
-              mq.publisher(name).createReadStream(function (errCreateReadStream, readStream) {
-                var counter;
-
+              mq.publisher(name).createReadStream((errCreateReadStream, readStream) => {
                 assert.that(errCreateReadStream).is.null();
 
-                counter = 0;
-                readStream.on('data', function (message) {
+                let counter = 0;
+
+                readStream.on('data', message => {
                   counter++;
-                  /*eslint-disable default-case*/
+                  /* eslint-disable default-case */
                   switch (counter) {
-                  /*eslint-enable default-case*/
+                  /* eslint-enable default-case */
                     case 1:
                       assert.that(message.payload).is.equalTo({ foo: 'bar' });
                       message.next();
@@ -421,7 +416,7 @@ suite('hase', function () {
                   }
                 });
 
-                mq.publisher(name).createWriteStream(function (err, writeStream) {
+                mq.publisher(name).createWriteStream((err, writeStream) => {
                   assert.that(err).is.null();
                   writeStream.write({ foo: 'bar' });
                   writeStream.write({ foo: 'baz' });
@@ -430,17 +425,16 @@ suite('hase', function () {
             });
 
             test('returns multiple messages in the correct order.', function (done) {
-              var name = uuid();
+              const name = uuid();
 
-              mq.publisher(name).createReadStream(function (errCreateReadStream, readStream) {
-                var barFinished;
-
+              mq.publisher(name).createReadStream((errCreateReadStream, readStream) => {
                 assert.that(errCreateReadStream).is.null();
 
-                barFinished = false;
-                readStream.on('data', function (message) {
+                let barFinished = false;
+
+                readStream.on('data', message => {
                   if (message.payload.foo === 'bar') {
-                    setTimeout(function () {
+                    setTimeout(() => {
                       barFinished = true;
                       message.next();
                     }, 0.5 * 1000);
@@ -453,7 +447,7 @@ suite('hase', function () {
                   }
                 });
 
-                mq.publisher(name).createWriteStream(function (err, writeStream) {
+                mq.publisher(name).createWriteStream((err, writeStream) => {
                   assert.that(err).is.null();
                   writeStream.write({ foo: 'bar' });
                   writeStream.write({ foo: 'baz' });
@@ -463,19 +457,18 @@ suite('hase', function () {
 
             suite('discard', function () {
               test('throws away a received message.', function (done) {
-                var name = uuid();
+                const name = uuid();
 
-                mq.publisher(name).createReadStream(function (errCreateReadStream, readStream) {
-                  var counter;
-
+                mq.publisher(name).createReadStream((errCreateReadStream, readStream) => {
                   assert.that(errCreateReadStream).is.null();
 
-                  counter = 0;
-                  readStream.on('data', function (message) {
+                  let counter = 0;
+
+                  readStream.on('data', message => {
                     counter++;
-                    /*eslint-disable default-case*/
+                    /* eslint-disable default-case */
                     switch (counter) {
-                    /*eslint-enable default-case*/
+                    /* eslint-enable default-case */
                       case 1:
                         assert.that(message.payload).is.equalTo({ foo: 'bar' });
                         message.discard();
@@ -488,7 +481,7 @@ suite('hase', function () {
                     }
                   });
 
-                  mq.publisher(name).createWriteStream(function (err, writeStream) {
+                  mq.publisher(name).createWriteStream((err, writeStream) => {
                     assert.that(err).is.null();
                     writeStream.write({ foo: 'bar' });
                     writeStream.write({ foo: 'baz' });
@@ -499,19 +492,18 @@ suite('hase', function () {
 
             suite('defer', function () {
               test('requeues a received message.', function (done) {
-                var name = uuid();
+                const name = uuid();
 
-                mq.publisher(name).createReadStream(function (errCreateReadStream, readStream) {
-                  var counter;
-
+                mq.publisher(name).createReadStream((errCreateReadStream, readStream) => {
                   assert.that(errCreateReadStream).is.null();
 
-                  counter = 0;
-                  readStream.on('data', function (message) {
+                  let counter = 0;
+
+                  readStream.on('data', message => {
                     counter++;
-                    /*eslint-disable default-case*/
+                    /* eslint-disable default-case */
                     switch (counter) {
-                    /*eslint-enable default-case*/
+                    /* eslint-enable default-case */
                       case 1:
                         assert.that(message.payload).is.equalTo({ foo: 'bar' });
                         message.defer();
@@ -524,7 +516,7 @@ suite('hase', function () {
                     }
                   });
 
-                  mq.publisher(name).createWriteStream(function (err, writeStream) {
+                  mq.publisher(name).createWriteStream((err, writeStream) => {
                     assert.that(err).is.null();
                     writeStream.write({ foo: 'bar' });
                   });

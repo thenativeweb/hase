@@ -2,7 +2,7 @@ machine:
   timezone: Europe/Berlin
 
   node:
-    version: 4.0.0
+    version: 6.2.0
 
   services:
     - rabbitmq-server
@@ -12,8 +12,8 @@ machine:
 
 dependencies:
   pre:
-    - npm install -g grunt-cli
+    - npm install -g roboter
 
 test:
   override:
-    - grunt
+    - bot
