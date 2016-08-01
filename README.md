@@ -26,11 +26,21 @@ hase.connect('amqp://...', (err, mq) => {
 });
 ```
 
-In case the connection is lost or something goes wrong, an error is emitted on the `mq` object. So you should subscribe to the `error` event.
+If something goes wrong, an error is emitted on the `mq` object. So you should subscribe to the `error` event.
 
 ```javascript
 hase.connect('amqp://...', (err, mq) => {
   mq.once('error', err => {
+    // ...
+  });
+});
+```
+
+Additionally, if you want to get informed when hase becomes disconnected, subscribe to the `disconnect` event.
+
+```javascript
+hase.connect('amqp://...', (err, mq) => {
+  mq.once('disconnect', err => {
     // ...
   });
 });
@@ -135,7 +145,7 @@ hase.connect('amqp://...', (err, mq) => {
 To build this module use [roboter](https://www.npmjs.com/package/roboter).
 
 ```bash
-$ bot build-server
+$ bot
 ```
 
 ## License

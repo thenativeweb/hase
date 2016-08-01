@@ -5,11 +5,12 @@ const EventEmitter = require('events').EventEmitter,
       Writable = require('stream').Writable;
 
 const assert = require('assertthat'),
+      shell = require('shelljs'),
       uuid = require('uuidv4');
 
-const hase = require('../lib/hase');
-
-const rabbitUrl = require('./config.json').rabbitUrl;
+const env = require('../helpers/env'),
+      hase = require('../../lib/hase'),
+      waitForRabbitMq = require('../helpers/waitForRabbitMq');
 
 suite('hase', () => {
   test('is an object.', done => {
@@ -46,7 +47,7 @@ suite('hase', () => {
     });
 
     test('returns a reference to the message queue.', done => {
-      hase.connect(rabbitUrl, (err, mq) => {
+      hase.connect(env.RABBITMQ_URL, (err, mq) => {
         assert.that(err).is.null();
         assert.that(mq).is.ofType('object');
         done();
@@ -56,8 +57,8 @@ suite('hase', () => {
     suite('mq', () => {
       let mq;
 
-      suiteSetup(done => {
-        hase.connect(rabbitUrl, (err, _mq) => {
+      setup(done => {
+        hase.connect(env.RABBITMQ_URL, (err, _mq) => {
           mq = _mq;
           done(err);
         });
@@ -66,6 +67,19 @@ suite('hase', () => {
       test('is an event emitter.', done => {
         assert.that(mq instanceof EventEmitter).is.true();
         done();
+      });
+
+      test('emits a disconnect event when the connection to RabbitMQ gets lost.', function (done) {
+        this.timeout(5 * 1000);
+
+        mq.once('disconnect', () => {
+          shell.exec('docker start rabbitmq', exitCode => {
+            assert.that(exitCode).is.equalTo(0);
+            waitForRabbitMq(done);
+          });
+        });
+
+        shell.exec('docker kill rabbitmq');
       });
 
       suite('worker', () => {

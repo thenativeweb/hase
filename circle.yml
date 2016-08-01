@@ -1,14 +1,14 @@
 machine:
   timezone: Europe/Berlin
 
+  environment:
+    RABBITMQ_URL: amqp://localhost:5673
+
   node:
     version: 6.2.0
 
   services:
-    - rabbitmq-server
-
-  hosts:
-    local.wolkenkit.io: 127.0.0.1
+    - docker
 
 dependencies:
   pre:
