@@ -70,7 +70,7 @@ suite('hase', () => {
       });
 
       test('emits a disconnect event when the connection to RabbitMQ gets lost.', function (done) {
-        this.timeout(5 * 1000);
+        this.timeout(15 * 1000);
 
         mq.once('disconnect', () => {
           shell.exec('docker start rabbitmq', exitCode => {
