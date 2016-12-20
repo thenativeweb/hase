@@ -14,15 +14,16 @@
   ],
   "main": "lib/hase.js",
   "dependencies": {
-    "amqplib": "0.4.2"
+    "amqplib": "0.5.1"
   },
   "devDependencies": {
-    "assertthat": "0.8.0",
+    "assertthat": "0.8.2",
     "knockat": "0.2.1",
-    "processenv": "0.1.0",
-    "roboter": "0.11.11",
-    "shelljs": "0.7.3",
-    "uuidv4": "0.3.1"
+    "processenv": "0.1.1",
+    "roboter": "0.13.15",
+    "roboter-server": "0.13.15",
+    "shelljs": "0.7.5",
+    "uuidv4": "0.4.0"
   },
   "repository": {
     "type": "git",
