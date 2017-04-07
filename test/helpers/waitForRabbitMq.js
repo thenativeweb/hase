@@ -1,19 +1,31 @@
 'use strict';
 
-const url = require('url');
-
-const knock = require('knockat');
+const amqp = require('amqplib/callback_api'),
+      retry = require('retry');
 
 const env = require('./env');
 
 const waitForRabbitMq = function (callback) {
-  const rabbit = url.parse(env.RABBITMQ_URL);
+  const operation = retry.operation();
 
-  knock.at(rabbit.hostname, rabbit.port, errKnockAt => {
-    if (errKnockAt) {
-      return callback(errKnockAt);
-    }
-    callback(null);
+  operation.attempt(() => {
+    amqp.connect(env.RABBITMQ_URL, {}, (err, connection) => {
+      if (operation.retry(err)) {
+        return;
+      }
+
+      if (err) {
+        return callback(operation.mainError());
+      }
+
+      connection.close(errClose => {
+        if (errClose) {
+          return callback(errClose);
+        }
+
+        callback(null);
+      });
+    });
   });
 };
 

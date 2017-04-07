@@ -12,18 +12,18 @@
       "email": "matthias.wagler@thenativeweb.io"
     }
   ],
-  "main": "lib/hase.js",
+  "main": "dist/hase.js",
   "dependencies": {
     "amqplib": "0.5.1"
   },
   "devDependencies": {
-    "assertthat": "0.8.3",
-    "knockat": "0.2.1",
+    "assertthat": "0.8.5",
     "processenv": "0.1.1",
-    "roboter": "0.14.4",
-    "roboter-server": "0.14.4",
-    "shelljs": "0.7.6",
-    "uuidv4": "0.4.0"
+    "retry": "0.10.1",
+    "roboter": "0.15.1",
+    "roboter-server": "0.15.1",
+    "shelljs": "0.7.7",
+    "uuidv4": "0.4.1"
   },
   "repository": {
     "type": "git",
