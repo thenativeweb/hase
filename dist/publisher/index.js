@@ -1,84 +1,119 @@
 'use strict';
 
-var stream = require('stream');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _require = require('stream'),
+    PassThrough = _require.PassThrough;
 
 var WriteStream = require('./WriteStream');
 
-var PassThrough = stream.PassThrough;
+var Publisher = function () {
+  function Publisher(channel, name) {
+    _classCallCheck(this, Publisher);
 
-var Publisher = function Publisher(channel, name) {
-  this.channel = channel;
-  this.name = name;
-};
-
-Publisher.prototype.createWriteStream = function (callback) {
-  var _this = this;
-
-  if (!callback) {
-    throw new Error('Callback is missing.');
+    this.channel = channel;
+    this.name = name;
   }
 
-  this.channel.assertExchange(this.name, 'fanout', { durable: true }, function (err) {
-    if (err) {
-      return callback(err);
-    }
-    callback(null, new WriteStream(_this.channel, _this.name));
-  });
-};
+  _createClass(Publisher, [{
+    key: 'createWriteStream',
+    value: function () {
+      var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _context.next = 2;
+                return this.channel.assertExchange(this.name, 'fanout', { durable: true });
 
-Publisher.prototype.createReadStream = function (callback) {
-  var _this2 = this;
+              case 2:
+                return _context.abrupt('return', new WriteStream(this.channel, this.name));
 
-  if (!callback) {
-    throw new Error('Callback is missing.');
-  }
+              case 3:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
 
-  this.channel.assertExchange(this.name, 'fanout', { durable: true }, function (errAssertExchange) {
-    if (errAssertExchange) {
-      return callback(errAssertExchange);
-    }
-
-    _this2.channel.assertQueue('', { autoDelete: true, exclusive: true }, function (errAssertQueue, ok) {
-      if (errAssertQueue) {
-        return callback(errAssertQueue);
+      function createWriteStream() {
+        return _ref.apply(this, arguments);
       }
 
-      var generatedQueueName = ok.queue;
+      return createWriteStream;
+    }()
+  }, {
+    key: 'createReadStream',
+    value: function () {
+      var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
+        var _this = this;
 
-      _this2.channel.bindQueue(generatedQueueName, _this2.name, '', {}, function (errBindQueue) {
-        if (errBindQueue) {
-          return callback(errBindQueue);
-        }
+        var ok, generatedQueueName, readStream;
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                _context2.next = 2;
+                return this.channel.assertExchange(this.name, 'fanout', { durable: true });
 
-        var readStream = new PassThrough({ objectMode: true });
+              case 2:
+                _context2.next = 4;
+                return this.channel.assertQueue('', { autoDelete: true, exclusive: true });
 
-        _this2.channel.consume(generatedQueueName, function (message) {
-          var parsedMessage = {};
+              case 4:
+                ok = _context2.sent;
+                generatedQueueName = ok.queue;
+                _context2.next = 8;
+                return this.channel.bindQueue(generatedQueueName, this.name, '', {});
 
-          parsedMessage.payload = JSON.parse(message.content.toString('utf8'));
+              case 8:
+                readStream = new PassThrough({ objectMode: true });
+                _context2.next = 11;
+                return this.channel.consume(generatedQueueName, function (message) {
+                  var parsedMessage = {};
 
-          parsedMessage.next = function () {
-            _this2.channel.ack(message);
-          };
+                  parsedMessage.payload = JSON.parse(message.content.toString('utf8'));
 
-          parsedMessage.discard = function () {
-            _this2.channel.nack(message, false, false);
-          };
+                  parsedMessage.next = function () {
+                    _this.channel.ack(message);
+                  };
 
-          parsedMessage.defer = function () {
-            _this2.channel.nack(message, false, true);
-          };
+                  parsedMessage.discard = function () {
+                    _this.channel.nack(message, false, false);
+                  };
 
-          readStream.write(parsedMessage);
-        }, {}, function (err) {
-          if (err) {
-            return callback(err);
+                  parsedMessage.defer = function () {
+                    _this.channel.nack(message, false, true);
+                  };
+
+                  readStream.write(parsedMessage);
+                }, {});
+
+              case 11:
+                return _context2.abrupt('return', readStream);
+
+              case 12:
+              case 'end':
+                return _context2.stop();
+            }
           }
-          callback(null, readStream);
-        });
-      });
-    });
-  });
-};
+        }, _callee2, this);
+      }));
+
+      function createReadStream() {
+        return _ref2.apply(this, arguments);
+      }
+
+      return createReadStream;
+    }()
+  }]);
+
+  return Publisher;
+}();
 
 module.exports = Publisher;

@@ -1,26 +1,41 @@
 'use strict';
 
-var stream = require('stream'),
-    util = require('util');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var Writable = stream.Writable;
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var WriteStream = function WriteStream(channel, name) {
-  Reflect.apply(Writable, this, [{ objectMode: true }]);
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-  this.channel = channel;
-  this.name = name;
-};
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-util.inherits(WriteStream, Writable);
+var _require = require('stream'),
+    Writable = _require.Writable;
 
-/* eslint-disable no-underscore-dangle */
-WriteStream.prototype._write = function (chunk, encoding, callback) {
-  /* eslint-enable no-underscore-dangle */
-  this.channel.publish(this.name, '', new Buffer(JSON.stringify(chunk), 'utf8'), {
-    persistent: true
-  });
-  callback(null);
-};
+var WriteStream = function (_Writable) {
+  _inherits(WriteStream, _Writable);
+
+  function WriteStream(channel, name) {
+    _classCallCheck(this, WriteStream);
+
+    var _this = _possibleConstructorReturn(this, (WriteStream.__proto__ || Object.getPrototypeOf(WriteStream)).call(this, { objectMode: true }));
+
+    _this.channel = channel;
+    _this.name = name;
+    return _this;
+  }
+
+  _createClass(WriteStream, [{
+    key: '_write',
+    value: function _write(chunk, encoding, callback) {
+      this.channel.publish(this.name, '', Buffer.from(JSON.stringify(chunk), 'utf8'), {
+        persistent: true
+      });
+
+      callback(null);
+    }
+  }]);
+
+  return WriteStream;
+}(Writable);
 
 module.exports = WriteStream;
