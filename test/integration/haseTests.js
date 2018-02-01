@@ -51,15 +51,19 @@ suite('hase', () => {
       });
 
       test('emits a disconnect event when the connection to RabbitMQ gets lost.', async function () {
-        await new Promise(resolve => {
+        await new Promise(async (resolve, reject) => {
           this.timeout(15 * 1000);
 
-          mq.once('disconnect', () => {
-            shell.exec('docker start rabbitmq', async exitCode => {
-              assert.that(exitCode).is.equalTo(0);
+          mq.once('disconnect', async () => {
+            try {
+              const { code } = shell.exec('docker start rabbitmq');
+
+              assert.that(code).is.equalTo(0);
               await waitForRabbitMq();
               resolve();
-            });
+            } catch (ex) {
+              reject(ex);
+            }
           });
 
           shell.exec('docker kill rabbitmq');
@@ -122,7 +126,7 @@ suite('hase', () => {
 
           suite('readable stream', () => {
             test('returns a single message.', async () => {
-              await new Promise(async resolve => {
+              await new Promise(async (resolve, reject) => {
                 const writeStream = await worker.createWriteStream();
 
                 writeStream.write({ foo: 'bar' });
@@ -130,18 +134,22 @@ suite('hase', () => {
                 const readStream = await worker.createReadStream();
 
                 readStream.once('data', message => {
-                  assert.that(message.payload).is.equalTo({ foo: 'bar' });
-                  assert.that(message.next).is.ofType('function');
-                  assert.that(message.discard).is.ofType('function');
-                  assert.that(message.defer).is.ofType('function');
-                  message.next();
-                  resolve();
+                  try {
+                    assert.that(message.payload).is.equalTo({ foo: 'bar' });
+                    assert.that(message.next).is.ofType('function');
+                    assert.that(message.discard).is.ofType('function');
+                    assert.that(message.defer).is.ofType('function');
+                    message.next();
+                    resolve();
+                  } catch (ex) {
+                    reject(ex);
+                  }
                 });
               });
             });
 
             test('returns multiple messages.', async () => {
-              await new Promise(async resolve => {
+              await new Promise(async (resolve, reject) => {
                 const writeStream = await worker.createWriteStream();
 
                 writeStream.write({ foo: 'bar' });
@@ -152,79 +160,13 @@ suite('hase', () => {
                 let counter = 0;
 
                 readStream.on('data', message => {
-                  counter += 1;
-
-                  switch (counter) {
-                    case 1: {
-                      assert.that(message.payload).is.equalTo({ foo: 'bar' });
-                      message.next();
-                      break;
-                    }
-                    case 2: {
-                      assert.that(message.payload).is.equalTo({ foo: 'baz' });
-                      message.next();
-
-                      return resolve();
-                    }
-                    default: {
-                      // Intentionally left blank.
-                    }
-                  }
-                });
-              });
-            });
-
-            test('returns multiple messages in the correct order.', async () => {
-              await new Promise(async resolve => {
-                const readStream = await worker.createReadStream();
-
-                let barFinished = false;
-
-                readStream.on('data', message => {
-                  switch (message.payload.foo) {
-                    case 'bar': {
-                      barFinished = true;
-                      message.next();
-                      break;
-                    }
-                    case 'baz': {
-                      assert.that(barFinished).is.true();
-                      message.next();
-
-                      return resolve();
-                    }
-                    default: {
-                      // Intentionally left blank.
-                    }
-                  }
-                });
-
-                const writeStream = await worker.createWriteStream();
-
-                writeStream.write({ foo: 'bar' });
-                writeStream.write({ foo: 'baz' });
-              });
-            });
-
-            suite('discard', () => {
-              test('throws away a received message.', async () => {
-                await new Promise(async resolve => {
-                  const writeStream = await worker.createWriteStream();
-
-                  writeStream.write({ foo: 'bar' });
-                  writeStream.write({ foo: 'baz' });
-
-                  const readStream = await worker.createReadStream();
-
-                  let counter = 0;
-
-                  readStream.on('data', message => {
+                  try {
                     counter += 1;
 
                     switch (counter) {
                       case 1: {
                         assert.that(message.payload).is.equalTo({ foo: 'bar' });
-                        message.discard();
+                        message.next();
                         break;
                       }
                       case 2: {
@@ -237,6 +179,84 @@ suite('hase', () => {
                         // Intentionally left blank.
                       }
                     }
+                  } catch (ex) {
+                    reject(ex);
+                  }
+                });
+              });
+            });
+
+            test('returns multiple messages in the correct order.', async () => {
+              await new Promise(async (resolve, reject) => {
+                const readStream = await worker.createReadStream();
+
+                let barFinished = false;
+
+                readStream.on('data', message => {
+                  try {
+                    switch (message.payload.foo) {
+                      case 'bar': {
+                        barFinished = true;
+                        message.next();
+                        break;
+                      }
+                      case 'baz': {
+                        assert.that(barFinished).is.true();
+                        message.next();
+
+                        return resolve();
+                      }
+                      default: {
+                        // Intentionally left blank.
+                      }
+                    }
+                  } catch (ex) {
+                    reject(ex);
+                  }
+                });
+
+                const writeStream = await worker.createWriteStream();
+
+                writeStream.write({ foo: 'bar' });
+                writeStream.write({ foo: 'baz' });
+              });
+            });
+
+            suite('discard', () => {
+              test('throws away a received message.', async () => {
+                await new Promise(async (resolve, reject) => {
+                  const writeStream = await worker.createWriteStream();
+
+                  writeStream.write({ foo: 'bar' });
+                  writeStream.write({ foo: 'baz' });
+
+                  const readStream = await worker.createReadStream();
+
+                  let counter = 0;
+
+                  readStream.on('data', message => {
+                    try {
+                      counter += 1;
+
+                      switch (counter) {
+                        case 1: {
+                          assert.that(message.payload).is.equalTo({ foo: 'bar' });
+                          message.discard();
+                          break;
+                        }
+                        case 2: {
+                          assert.that(message.payload).is.equalTo({ foo: 'baz' });
+                          message.next();
+
+                          return resolve();
+                        }
+                        default: {
+                          // Intentionally left blank.
+                        }
+                      }
+                    } catch (ex) {
+                      reject(ex);
+                    }
                   });
                 });
               });
@@ -244,7 +264,7 @@ suite('hase', () => {
 
             suite('defer', () => {
               test('requeues a received message.', async () => {
-                await new Promise(async resolve => {
+                await new Promise(async (resolve, reject) => {
                   const writeStream = await worker.createWriteStream();
 
                   writeStream.write({ foo: 'bar' });
@@ -254,23 +274,27 @@ suite('hase', () => {
                   let counter = 0;
 
                   readStream.on('data', message => {
-                    counter += 1;
+                    try {
+                      counter += 1;
 
-                    switch (counter) {
-                      case 1: {
-                        assert.that(message.payload).is.equalTo({ foo: 'bar' });
-                        message.defer();
-                        break;
-                      }
-                      case 2: {
-                        assert.that(message.payload).is.equalTo({ foo: 'bar' });
-                        message.next();
+                      switch (counter) {
+                        case 1: {
+                          assert.that(message.payload).is.equalTo({ foo: 'bar' });
+                          message.defer();
+                          break;
+                        }
+                        case 2: {
+                          assert.that(message.payload).is.equalTo({ foo: 'bar' });
+                          message.next();
 
-                        return resolve();
+                          return resolve();
+                        }
+                        default: {
+                          // Intentionally left blank.
+                        }
                       }
-                      default: {
-                        // Intentionally left blank.
-                      }
+                    } catch (ex) {
+                      reject(ex);
                     }
                   });
                 });
@@ -336,13 +360,17 @@ suite('hase', () => {
 
           suite('readable stream', () => {
             test('returns a single message.', async () => {
-              await new Promise(async resolve => {
+              await new Promise(async (resolve, reject) => {
                 const readStream = await publisher.createReadStream();
 
                 readStream.once('data', message => {
-                  assert.that(message.payload).is.equalTo({ foo: 'bar' });
-                  message.next();
-                  resolve();
+                  try {
+                    assert.that(message.payload).is.equalTo({ foo: 'bar' });
+                    message.next();
+                    resolve();
+                  } catch (ex) {
+                    reject(ex);
+                  }
                 });
 
                 const writeStream = await publisher.createWriteStream();
@@ -352,29 +380,33 @@ suite('hase', () => {
             });
 
             test('returns multiple messages.', async () => {
-              await new Promise(async resolve => {
+              await new Promise(async (resolve, reject) => {
                 const readStream = await publisher.createReadStream();
 
                 let counter = 0;
 
                 readStream.on('data', message => {
-                  counter += 1;
+                  try {
+                    counter += 1;
 
-                  switch (counter) {
-                    case 1: {
-                      assert.that(message.payload).is.equalTo({ foo: 'bar' });
-                      message.next();
-                      break;
-                    }
-                    case 2: {
-                      assert.that(message.payload).is.equalTo({ foo: 'baz' });
-                      message.next();
+                    switch (counter) {
+                      case 1: {
+                        assert.that(message.payload).is.equalTo({ foo: 'bar' });
+                        message.next();
+                        break;
+                      }
+                      case 2: {
+                        assert.that(message.payload).is.equalTo({ foo: 'baz' });
+                        message.next();
 
-                      return resolve();
+                        return resolve();
+                      }
+                      default: {
+                        // Intentionally left blank.
+                      }
                     }
-                    default: {
-                      // Intentionally left blank.
-                    }
+                  } catch (ex) {
+                    reject(ex);
                   }
                 });
 
@@ -386,27 +418,31 @@ suite('hase', () => {
             });
 
             test('returns multiple messages in the correct order.', async () => {
-              await new Promise(async resolve => {
+              await new Promise(async (resolve, reject) => {
                 const readStream = await publisher.createReadStream();
 
                 let barFinished = false;
 
                 readStream.on('data', message => {
-                  switch (message.payload.foo) {
-                    case 'bar': {
-                      barFinished = true;
-                      message.next();
-                      break;
-                    }
-                    case 'baz': {
-                      assert.that(barFinished).is.true();
-                      message.next();
+                  try {
+                    switch (message.payload.foo) {
+                      case 'bar': {
+                        barFinished = true;
+                        message.next();
+                        break;
+                      }
+                      case 'baz': {
+                        assert.that(barFinished).is.true();
+                        message.next();
 
-                      return resolve();
+                        return resolve();
+                      }
+                      default: {
+                        // Intentionally left blank.
+                      }
                     }
-                    default: {
-                      // Intentionally left blank.
-                    }
+                  } catch (ex) {
+                    reject(ex);
                   }
                 });
 
@@ -419,29 +455,33 @@ suite('hase', () => {
 
             suite('discard', () => {
               test('throws away a received message.', async () => {
-                await new Promise(async resolve => {
+                await new Promise(async (resolve, reject) => {
                   const readStream = await publisher.createReadStream();
 
                   let counter = 0;
 
                   readStream.on('data', message => {
-                    counter += 1;
+                    try {
+                      counter += 1;
 
-                    switch (counter) {
-                      case 1: {
-                        assert.that(message.payload).is.equalTo({ foo: 'bar' });
-                        message.discard();
-                        break;
-                      }
-                      case 2: {
-                        assert.that(message.payload).is.equalTo({ foo: 'baz' });
-                        message.next();
+                      switch (counter) {
+                        case 1: {
+                          assert.that(message.payload).is.equalTo({ foo: 'bar' });
+                          message.discard();
+                          break;
+                        }
+                        case 2: {
+                          assert.that(message.payload).is.equalTo({ foo: 'baz' });
+                          message.next();
 
-                        return resolve();
+                          return resolve();
+                        }
+                        default: {
+                          // Intentionally left blank.
+                        }
                       }
-                      default: {
-                        // Intentionally left blank.
-                      }
+                    } catch (ex) {
+                      reject(ex);
                     }
                   });
 
@@ -455,29 +495,33 @@ suite('hase', () => {
 
             suite('defer', () => {
               test('requeues a received message.', async () => {
-                await new Promise(async resolve => {
+                await new Promise(async (resolve, reject) => {
                   const readStream = await publisher.createReadStream();
 
                   let counter = 0;
 
                   readStream.on('data', message => {
-                    counter += 1;
+                    try {
+                      counter += 1;
 
-                    switch (counter) {
-                      case 1: {
-                        assert.that(message.payload).is.equalTo({ foo: 'bar' });
-                        message.defer();
-                        break;
-                      }
-                      case 2: {
-                        assert.that(message.payload).is.equalTo({ foo: 'bar' });
-                        message.next();
+                      switch (counter) {
+                        case 1: {
+                          assert.that(message.payload).is.equalTo({ foo: 'bar' });
+                          message.defer();
+                          break;
+                        }
+                        case 2: {
+                          assert.that(message.payload).is.equalTo({ foo: 'bar' });
+                          message.next();
 
-                        return resolve();
+                          return resolve();
+                        }
+                        default: {
+                          // Intentionally left blank.
+                        }
                       }
-                      default: {
-                        // Intentionally left blank.
-                      }
+                    } catch (ex) {
+                      reject(ex);
                     }
                   });
 
