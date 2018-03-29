@@ -7,9 +7,9 @@ const assert = require('assertthat'),
       shell = require('shelljs'),
       uuid = require('uuidv4');
 
-const env = require('../helpers/env'),
-      hase = require('../../lib/hase'),
-      waitForRabbitMq = require('../helpers/waitForRabbitMq');
+const env = require('../shared/env'),
+      hase = require('../../src/hase'),
+      waitForRabbitMq = require('../shared/waitForRabbitMq');
 
 suite('hase', () => {
   test('is an object.', async () => {
