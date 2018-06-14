@@ -24,9 +24,9 @@
   "devDependencies": {
     "assertthat": "1.0.0",
     "async-retry": "1.2.1",
-    "roboter": "thenativeweb/roboter#vnext",
-    "shelljs": "0.8.1",
-    "uuidv4": "1.0.0"
+    "roboter": "1.0.4",
+    "shelljs": "0.8.2",
+    "uuidv4": "1.0.1"
   },
   "repository": {
     "type": "git",
