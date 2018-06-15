@@ -24,6 +24,7 @@
   "devDependencies": {
     "assertthat": "1.0.0",
     "async-retry": "1.2.1",
+    "common-tags": "1.8.0",
     "roboter": "1.0.4",
     "shelljs": "0.8.2",
     "uuidv4": "1.0.1"
