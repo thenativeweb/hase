@@ -29,12 +29,12 @@ suite('hase', () => {
 
     test('throws an error if it can not connect using the given url.', async () => {
       await assert.that(async () => {
-        await hase.connect('amqp://admin:admin@localhost:12345');
+        await hase.connect({ url: 'amqp://admin:admin@localhost:12345' });
       }).is.throwingAsync('Could not connect to amqp://admin:admin@localhost:12345.');
     });
 
     test('returns a reference to the message queue.', async () => {
-      const mq = await hase.connect(env.RABBITMQ_URL);
+      const mq = await hase.connect({ url: env.RABBITMQ_URL });
 
       assert.that(mq).is.ofType('object');
     });
@@ -43,7 +43,7 @@ suite('hase', () => {
       let mq;
 
       setup(async () => {
-        mq = await hase.connect(env.RABBITMQ_URL);
+        mq = await hase.connect({ url: env.RABBITMQ_URL });
       });
 
       test('is an event emitter.', async () => {
@@ -51,9 +51,9 @@ suite('hase', () => {
       });
 
       test('emits a disconnect event when the connection to RabbitMQ gets lost.', async function () {
-        await new Promise(async (resolve, reject) => {
-          this.timeout(15 * 1000);
+        this.timeout(20 * 1000);
 
+        await new Promise(async (resolve, reject) => {
           mq.once('disconnect', async () => {
             try {
               const { code } = shell.exec('docker start rabbitmq');

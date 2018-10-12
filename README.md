@@ -21,13 +21,22 @@ const hase = require('hase');
 Then you need to connect to a RabbitMQ instance by calling the `connect` function and providing the instance's url.
 
 ```javascript
-const mq = await hase.connect('amqp://...');
+const mq = await hase.connect({ url: 'amqp://...' });
+```
+
+By default hase will only prefetch one message at a time. If you want to increase the prefetch size use the `prefetch` option.
+
+```javascript
+const mq = await hase.connect({
+  url: 'amqp://...',
+  prefetch: 64
+});
 ```
 
 If something goes wrong, an error is emitted on the `mq` object. So you should subscribe to the `error` event.
 
 ```javascript
-const mq = await hase.connect('amqp://...');
+const mq = await hase.connect({ url: 'amqp://...' });
 
 mq.once('error', err => {
   // ...
@@ -37,7 +46,7 @@ mq.once('error', err => {
 Additionally, if you want to get informed when hase becomes disconnected, subscribe to the `disconnect` event.
 
 ```javascript
-const mq = await hase.connect('amqp://...');
+const mq = await hase.connect({ url: 'amqp://...' });
 
 mq.once('disconnect', err => {
   // ...
@@ -49,7 +58,7 @@ mq.once('disconnect', err => {
 A worker is a combination of a single exchange with a single queue that shares its load across multiple nodes. For that, call the `worker` function and specify a name.
 
 ```javascript
-const mq = await hase.connect('amqp://...');
+const mq = await hase.connect({ url: 'amqp://...' });
 
 mq.once('error', err => {
   // ...
@@ -61,7 +70,7 @@ const worker = mq.worker('test');
 To publish messages to this worker, call the `createWriteStream` function, and then use the `write` function of the stream that is returned.
 
 ```javascript
-const mq = await hase.connect('amqp://...');
+const mq = await hase.connect({ url: 'amqp://...' });
 
 mq.once('error', err => {
   // ...
@@ -77,7 +86,7 @@ To subscribe to messages received by this worker, call the `createReadStream` fu
 Additionally, you need to process the received message. If you were able to successfully handle the message, call the `next` function. If not, either call `discard` (which removes the message), or call `defer` (which requeues the message).
 
 ```javascript
-const mq = await hase.connect('amqp://...');
+const mq = await hase.connect({ url: 'amqp://...' });
 
 mq.once('error', err => {
   // ...
@@ -96,7 +105,7 @@ stream.on('data', message => {
 A publisher is a combination of a single exchange with multiple queues where each queue receives all messages. For that, call the `publisher` function and specify a name.
 
 ```javascript
-const mq = await hase.connect('amqp://...');
+const mq = await hase.connect({ url: 'amqp://...' });
 
 mq.once('error', err => {
   // ...
@@ -108,7 +117,7 @@ const publisher = mq.publisher('test');
 To publish messages to this publisher, call the `createWriteStream` function, and then use the `write` function of the stream that is returned.
 
 ```javascript
-const mq = await hase.connect('amqp://...');
+const mq = await hase.connect({ url: 'amqp://...' });
 
 mq.once('error', err => {
   // ...
@@ -124,7 +133,7 @@ To subscribe to messages received by this publisher, call the `createReadStream`
 Additionally, you need to process the received message. If you were able to successfully handle the message, call the `next` function. If not, either call `discard` (which removes the message), or call `defer` (which requeues the message).
 
 ```javascript
-const mq = await hase.connect('amqp://...');
+const mq = await hase.connect({ url: 'amqp://...' });
 
 mq.once('error', err => {
   // ...

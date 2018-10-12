@@ -6,7 +6,7 @@ const Mq = require('./Mq');
 
 const hase = {};
 
-hase.connect = async function (url) {
+hase.connect = async function ({ url, prefetch = 1 } = {}) {
   if (!url) {
     throw new Error('Url is missing.');
   }
@@ -21,7 +21,7 @@ hase.connect = async function (url) {
 
   const channel = await connection.createChannel();
 
-  channel.prefetch(1);
+  channel.prefetch(prefetch);
 
   return new Mq(connection, channel);
 };
