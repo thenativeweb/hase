@@ -20,18 +20,17 @@
       "email": "jan-hendrik.grundhoefer@thenativeweb.io"
     }
   ],
-  "main": "dist/hase.js",
+  "main": "lib/hase.js",
   "dependencies": {
-    "@babel/runtime": "7.3.1",
     "amqplib": "0.5.3"
   },
   "devDependencies": {
-    "assertthat": "2.0.1",
+    "assertthat": "2.0.3",
     "async-retry": "1.2.3",
     "common-tags": "1.8.0",
-    "roboter": "3.0.4",
+    "roboter": "4.0.4",
     "shelljs": "0.8.3",
-    "uuidv4": "2.0.0"
+    "uuidv4": "4.0.0"
   },
   "repository": {
     "type": "git",

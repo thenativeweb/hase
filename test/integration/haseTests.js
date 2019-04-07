@@ -8,7 +8,7 @@ const assert = require('assertthat'),
       uuid = require('uuidv4');
 
 const env = require('../shared/env'),
-      hase = require('../../src/hase'),
+      hase = require('../../lib/hase'),
       waitForRabbitMq = require('../shared/waitForRabbitMq');
 
 suite('hase', () => {
