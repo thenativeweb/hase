@@ -29,7 +29,7 @@
     "async-retry": "1.2.3",
     "common-tags": "1.8.0",
     "roboter": "4.0.4",
-    "shelljs": "0.8.3",
+    "shelljs": "0.8.5",
     "uuidv4": "4.0.0"
   },
   "repository": {
